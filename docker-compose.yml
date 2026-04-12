@@ -1,4 +1,5 @@
 services:
+  # n8n is the workflow automation tool that will use the Ollama LLM for AI capabilities
   n8n:
     image: n8nio/n8n:latest
     restart: unless-stopped
@@ -17,6 +18,7 @@ services:
     networks:
       - bit
 
+  # Ollama is the LLM server that n8n will connect to for AI capabilities
   ollama:
     image: ollama/ollama:latest
     restart: unless-stopped
@@ -24,6 +26,12 @@ services:
       - "11434:11434"
     volumes:
       - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     # Uncomment below if you have an NVIDIA GPU
     # deploy:
     #   resources:
@@ -34,6 +42,19 @@ services:
     #           capabilities: [gpu]
     networks:
       - bit
+
+  # This service ensures that the Gemma 4 model is pulled and ready before n8n starts its workflows
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["ollama", "pull", "gemma4"]
+    networks:
+      - bit
+    restart: on-failure
 
 volumes:
   n8n_data:
