@@ -43,7 +43,8 @@ services:
     networks:
       - bit
 
-  # This service ensures that the Gemma 4 model is pulled and ready before n8n starts its workflows
+  # Gemma4 is also a good option
+  # This service ensures that the model is pulled and ready before n8n starts its workflows
   ollama-pull:
     image: ollama/ollama:latest
     depends_on:
@@ -51,7 +52,7 @@ services:
         condition: service_healthy
     environment:
       - OLLAMA_HOST=http://ollama:11434
-    entrypoint: ["ollama", "pull", "gemma4"]
+    entrypoint: ["ollama", "pull", "hf.co/richardyoung/Qwen3-14B-abliterated-GGUF"]
     networks:
       - bit
     restart: on-failure
